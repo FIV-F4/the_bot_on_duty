@@ -1,0 +1,6 @@
+aiogram==3.12.0
+selenium
+webdriver-manager
+python-dotenv
+requests>=2.31.0
+pyinstaller>=6.3.0
