@@ -1,4 +1,5 @@
-# keyboards.py
+#keyboards.py
+
 from bot_state import bot_state
 from aiogram.types import (
     KeyboardButton,
@@ -11,9 +12,10 @@ from config import PROBLEM_LEVELS, PROBLEM_SERVICES
 
 
 def create_main_keyboard() -> ReplyKeyboardMarkup:
+    from aiogram.types import KeyboardButton, ReplyKeyboardMarkup  # Чтобы избежать циклического импорта
+
     builder = ReplyKeyboardBuilder()
     builder.add(
-        KeyboardButton(text="📸 JIRA/Confluence"),
         KeyboardButton(text="📢 Сообщить"),
         KeyboardButton(text="🛂 Управлять"),
         KeyboardButton(text="📕 Текущие события"),
@@ -24,15 +26,16 @@ def create_main_keyboard() -> ReplyKeyboardMarkup:
 
 
 def create_view_selection_keyboard():
-    builder = ReplyKeyboardBuilder()
-    builder.add(
-        KeyboardButton(text="📅 Календарь работ"),
-        KeyboardButton(text="🔍 Посмотреть JIRA"),
-        KeyboardButton(text="🌐 Посмотреть Confluence"),
-        KeyboardButton(text="❌ Отмена")
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="📅 Календарь работ", callback_data="view_calendar"),
+        InlineKeyboardButton(text="🔍 Посмотреть JIRA", callback_data="view_jira"),
+        InlineKeyboardButton(text="🌐 Посмотреть Confluence", callback_data="view_confluence")
     )
-    builder.adjust(1, 1, 1)
-    return builder.as_markup(resize_keyboard=True)
+    builder.row(
+        InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_action")
+    )
+    return builder.as_markup()
 
 
 def create_message_type_keyboard() -> InlineKeyboardMarkup:
@@ -48,28 +51,29 @@ def create_message_type_keyboard() -> InlineKeyboardMarkup:
 
 
 def create_cancel_keyboard():
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="❌ Отмена"))
-    return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_action")
+    )
+    return builder.as_markup()
 
 
 def create_yes_no_keyboard():
-    builder = ReplyKeyboardBuilder()
+    builder = InlineKeyboardBuilder()
     builder.row(
-        KeyboardButton(text="✅ Да"),
-        KeyboardButton(text="❌ Нет")
+        InlineKeyboardButton(text="✅ Да", callback_data="yes"),
+        InlineKeyboardButton(text="❌ Нет", callback_data="no")
     )
-    return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+    return builder.as_markup()
 
 
 def create_confirmation_keyboard():
-    builder = ReplyKeyboardBuilder()
-    builder.add(
-        KeyboardButton(text="Отправить"),
-        KeyboardButton(text="Не отправлять")
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="📩 Отправить", callback_data="confirm_send"),
+        InlineKeyboardButton(text="🚫 Не отправлять", callback_data="confirm_cancel")
     )
-    builder.adjust(2)
-    return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+    return builder.as_markup()
 
 
 # --- Изменённые функции для работы команды управлять---
@@ -110,13 +114,13 @@ def create_alarm_selection_keyboard(alarm_ids: list = None):
 
 
 def create_stop_type_keyboard():
-    builder = ReplyKeyboardBuilder()
+    builder = InlineKeyboardBuilder()
     builder.row(
-        KeyboardButton(text="🚨 Сбой 🚨"),
-        KeyboardButton(text="🔧 Работа 🔧")
+        InlineKeyboardButton(text="🚨 Сбой 🚨", callback_data="stop_type_alarm"),
+        InlineKeyboardButton(text="🔧 Работа 🔧", callback_data="stop_type_maintenance")
     )
-    builder.row(KeyboardButton(text="❌ Отмена"))
-    return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+    builder.row(InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_action"))
+    return builder.as_markup()
 
 
 def create_maintenance_selection_keyboard(maintenances: dict):
@@ -133,6 +137,7 @@ def create_maintenance_selection_keyboard(maintenances: dict):
     builder.row(InlineKeyboardButton(text="❌ Отмена", callback_data="select_cancel"))
     return builder.as_markup()
 
+
 def create_reminder_keyboard():
     builder = InlineKeyboardBuilder()
     builder.row(
@@ -141,6 +146,7 @@ def create_reminder_keyboard():
     )
     return builder.as_markup()
 
+
 def create_event_list_keyboard():
     builder = InlineKeyboardBuilder()
     builder.button(text="🚨 Сбои", callback_data="show_alarms")
@@ -148,6 +154,7 @@ def create_event_list_keyboard():
     builder.button(text="❌ Закрыть", callback_data="close_selection")
     builder.adjust(1)
     return builder.as_markup()
+
 
 def create_level_keyboard() -> InlineKeyboardMarkup:
     """Создает клавиатуру для выбора уровня проблемы."""
@@ -158,6 +165,7 @@ def create_level_keyboard() -> InlineKeyboardMarkup:
     builder.adjust(1)  # Размещаем кнопки в один столбец
     return builder.as_markup()
 
+
 def create_service_keyboard() -> InlineKeyboardMarkup:
     """Создает клавиатуру для выбора сервиса."""
     builder = InlineKeyboardBuilder()
@@ -165,4 +173,23 @@ def create_service_keyboard() -> InlineKeyboardMarkup:
         builder.button(text=service, callback_data=f"svc_{i}")
     builder.button(text="Отмена", callback_data="cancel")
     builder.adjust(1)  # Размещаем кнопки в один столбец
+    return builder.as_markup()
+
+
+def create_refresh_keyboard(current_page: int = 0, total_pages: int = 1) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+
+    if total_pages and total_pages > 1:
+        row = []
+        if current_page > 0:
+            row.append(InlineKeyboardButton(text="⬅️ Назад", callback_data="page_prev"))
+        if current_page < total_pages - 1:
+            row.append(InlineKeyboardButton(text="Вперёд ➡️", callback_data="page_next"))
+        if row:
+            builder.row(*row)
+
+    builder.row(
+        InlineKeyboardButton(text="🔄 Обновить", callback_data="refresh_selection"),
+        InlineKeyboardButton(text="❌ Закрыть", callback_data="close_selection")
+    )
     return builder.as_markup()
