@@ -1,5 +1,5 @@
 Welcome to The Bot on Duty documentation!
-======================================
+=========================================
 
 .. toctree::
    :maxdepth: 2

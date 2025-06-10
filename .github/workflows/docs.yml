@@ -1,16 +1,16 @@
-name: Documentation
-
-on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - '**.py'
-      - 'docs/**'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - '**.py'
-      - 'docs/**'
+#name: Documentation
+#
+#on:
+#  push:
+#    branches: [ main, develop ]
+#    paths:
+#      - '**.py'
+#      - 'docs/**'
+#  pull_request:
+#    branches: [ main, develop ]
+#    paths:
+#      - '**.py'
+#      - 'docs/**'
 
 jobs:
   build:
