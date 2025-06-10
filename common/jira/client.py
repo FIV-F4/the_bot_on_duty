@@ -98,20 +98,31 @@ class JiraApiClient(JiraClient):
         if not self.session:
             raise JiraConnectionError("Сессия не инициализирована")
 
+        print("Отправляем данные для создания заявки:", json.dumps(issue_data, indent=2, ensure_ascii=False))
+
         async with self.session.post(
             f"{self.base_url}/issue",
             json=issue_data,
             timeout=self.config.REQUEST_TIMEOUT
         ) as response:
-            response.raise_for_status()
+            try:
+                response.raise_for_status()
+            except aiohttp.ClientResponseError:
+                text = await response.text()
+                print("Ошибка от JIRA:", text)
+                raise
             data = await response.json()
-            
+            print("Получен ответ от API:", json.dumps(data, indent=2, ensure_ascii=False))
             issue_key = data.get('key')
             if not issue_key:
                 raise JiraError(f"Не удалось получить ключ созданной задачи: {data}")
 
-            # Получаем полную информацию о созданной задаче
-            return await self.get_issue(issue_key)
+            # Возвращаем только ключ и ID из ответа JIRA
+            return {
+                "id": data.get("id"),
+                "key": data.get("key"),
+                "self": data.get("self")
+            }
     
     @handle_jira_errors
     async def get_issue(self, issue_key: str) -> JiraIssue:

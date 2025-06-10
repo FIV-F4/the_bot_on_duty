@@ -31,5 +31,6 @@ class JiraConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=str(dotenv_path),
         env_file_encoding="utf-8",
-        case_sensitive=True
+        case_sensitive=True,
+        extra='ignore'
     ) 

@@ -1,3 +1,3 @@
 """
-Общие компоненты проекта.
+Common package initialization.
 """ 
