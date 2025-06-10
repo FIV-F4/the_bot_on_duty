@@ -1,8 +1,8 @@
-# manage_handlers.py
+# handlers/manage_handlers.py
+
 import logging
 from datetime import datetime, timedelta
 import asyncio
-
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
@@ -18,7 +18,8 @@ from keyboards import (
     create_alarm_selection_keyboard,
     create_maintenance_selection_keyboard,
     create_extension_time_keyboard,
-    create_reminder_keyboard
+    create_reminder_keyboard,
+    create_main_keyboard
 )
 from utils.helpers import is_admin, is_superadmin, get_user_name
 from config import CONFIG
@@ -29,8 +30,8 @@ router = Router()
 
 # --- Состояния FSM ---
 class StopStates(StatesGroup):
-    SELECT_TYPE = State()           # Выбор типа (Сбой / Работа)
-    SELECT_ACTION = State()         # Остановить / Продлить
+    SELECT_TYPE = State()           # Выбор типа события: сбой или работа
+    SELECT_ACTION = State()         # Выбор действия: остановить / продлить
     SELECT_ALARM_DURATION = State() # Время продления сбоя
     ENTER_MAINTENANCE_END = State() # Новое время окончания работы
     SELECT_ITEM = State()           # Выбор конкретного события
@@ -45,13 +46,11 @@ class ReminderStates(StatesGroup):
 @router.message(F.text == "🛂 Управлять")
 async def stop_selection(message: Message, state: FSMContext):
     user_id = message.from_user.id
-    logger.info(f"[{user_id}] Пользователь начал управление событиями", exc_info=True)
-
+    logger.info(f"[{user_id}] Пользователь начал управление событиями")
     if not is_admin(user_id):
         logger.warning(f"[{user_id}] Пользователь не является админом — доступ запрещён")
         await message.answer("❌ У вас нет прав для выполнения этой команды", parse_mode=ParseMode.HTML)
         return
-
     await state.clear()
     logger.info(f"[{user_id}] Очистка состояния завершена")
     await message.answer("Выберите тип события:", reply_markup=create_stop_type_keyboard())
@@ -59,57 +58,57 @@ async def stop_selection(message: Message, state: FSMContext):
     logger.info(f"[{user_id}] Перешёл в состояние SELECT_TYPE")
 
 
-# --- Выбор типа события (Сбой / Работа) ---
-@router.message(StopStates.SELECT_TYPE)
-async def select_event_type(message: Message, state: FSMContext):
-    user_id = message.from_user.id
-    choice = message.text.strip()
+# --- Обработчик выбора типа события через callback_query ---
+@router.callback_query(StopStates.SELECT_TYPE)
+async def select_event_type(callback: CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    choice = callback.data  # Например: stop_type_alarm или stop_type_maintenance
     logger.info(f"[{user_id}] Пользователь выбрал тип события: {choice}")
 
-    if choice == "❌ Отмена":
+    if choice == "cancel_action":
         logger.info(f"[{user_id}] Действие отменено пользователем")
         await state.clear()
-        await message.answer("🚫 Действие отменено", reply_markup=None)
+        await callback.message.edit_text("🚫 Действие отменено", reply_markup=None)
+        await callback.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
+        await callback.answer()
         return
 
-    elif choice == "🚨 Сбой 🚨":
+    elif choice == "stop_type_alarm":
         user_alarms = bot_state.get_user_active_alarms(user_id)
         logger.info(f"[{user_id}] Запрошены активные сбои пользователя")
-
         if not user_alarms and not is_superadmin(user_id):
             logger.warning(f"[{user_id}] У пользователя нет активных сбоев")
-            await message.answer("❌ У вас нет активных сбоев", reply_markup=None)
+            await callback.message.edit_text("❌ У вас нет активных сбоев", reply_markup=None)
+            await callback.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
+            await callback.answer()
             return
-
         keyboard = create_alarm_selection_keyboard(user_alarms)
         await state.update_data(type="alarm")
         logger.info(f"[{user_id}] Показаны доступные сбои")
-        await message.answer("Выберите сбой:", reply_markup=keyboard)
+        await callback.message.edit_text("Выберите сбой:", reply_markup=keyboard)
         await state.set_state(StopStates.SELECT_ITEM)
         logger.info(f"[{user_id}] Перешёл в состояние SELECT_ITEM")
 
-    elif choice == "🔧 Работа 🔧":
+    elif choice == "stop_type_maintenance":
         active_works = bot_state.active_maintenances
         works_by_author = {
             wid: work for wid, work in active_works.items()
             if work["user_id"] == user_id or is_superadmin(user_id)
         }
-
         if not works_by_author:
             logger.warning(f"[{user_id}] Нет доступных работ")
-            await message.answer("❌ У вас нет активных работ", reply_markup=None)
+            await callback.message.edit_text("❌ У вас нет активных работ", reply_markup=None)
+            await callback.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
+            await callback.answer()
             return
-
         keyboard = create_maintenance_selection_keyboard(works_by_author)
         await state.update_data(type="maintenance")
         logger.info(f"[{user_id}] Показаны доступные работы")
-        await message.answer("Выберите работу:", reply_markup=keyboard)
+        await callback.message.edit_text("Выберите работу:", reply_markup=keyboard)
         await state.set_state(StopStates.SELECT_ITEM)
         logger.info(f"[{user_id}] Перешёл в состояние SELECT_ITEM")
 
-    else:
-        logger.warning(f"[{user_id}] Некорректный выбор: {choice}")
-        await message.answer("⚠️ Некорректный выбор", reply_markup=create_stop_type_keyboard())
+    await callback.answer()
 
 
 # --- Выбор конкретного события ---
@@ -128,6 +127,20 @@ async def select_action(call: CallbackQuery, state: FSMContext):
 
         data_type, item_id = parts
         logger.debug(f"[{user_id}] Тип: {data_type}, ID: {item_id}")
+
+        if data_type == "alarm" and item_id == "no_alarms":
+            logger.warning(f"[{user_id}] Пользователь попытался выбрать сбой, но их нет")
+            await call.message.edit_text("❌ У вас нет активных сбоев", reply_markup=None)
+            await call.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
+            await state.clear()
+            return
+
+        elif data_type == "maintenance" and item_id == "no_maintenances":
+            logger.warning(f"[{user_id}] Пользователь попытался выбрать работу, но их нет")
+            await call.message.edit_text("❌ У вас нет активных работ", reply_markup=None)
+            await call.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
+            await state.clear()
+            return
 
         if data_type == "alarm" and item_id not in bot_state.active_alarms:
             logger.warning(f"[{user_id}] Сбой {item_id} не найден")
@@ -160,13 +173,12 @@ async def handle_action_callback(call: CallbackQuery, state: FSMContext):
 
     if action == "action_stop":
         logger.info(f"[{call.from_user.id}] Начата остановка {data_type}: {item_id}")
-
         if data_type == "alarm":
             alarm_info = bot_state.active_alarms[item_id]
             del bot_state.active_alarms[item_id]
             text = (
                 f"✅ <b>Сбой завершён</b>\n"
-                f"• <b>Проблема:</b> {alarm_info['issue']}\n"
+                f"• <b>Проблема:</b> {alarm_info['issue']}"
             )
             await call.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], text, parse_mode="HTML")
             logger.info(f"[{call.from_user.id}] Сбой {item_id} удалён из состояния")
@@ -176,7 +188,7 @@ async def handle_action_callback(call: CallbackQuery, state: FSMContext):
             del bot_state.active_maintenances[item_id]
             text = (
                 f"✅ <b>Работа завершена</b>\n"
-                f"• <b>Описание:</b> {maint_info['description']}\n"
+                f"• <b>Описание:</b> {maint_info['description']}"
             )
             await call.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], text, parse_mode="HTML")
             logger.info(f"[{call.from_user.id}] Работа {item_id} удалена из состояния")
@@ -186,6 +198,7 @@ async def handle_action_callback(call: CallbackQuery, state: FSMContext):
         logger.info(f"[{call.from_user.id}] Бот сохранил обновлённое состояние")
         await state.clear()
         logger.info(f"[{call.from_user.id}] FSM очищена после остановки")
+        await call.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
 
     elif action == "action_extend":
         logger.info(f"[{call.from_user.id}] Начато продление {data_type}: {item_id}")
@@ -212,27 +225,29 @@ async def handle_alarm_extension_callback(call: CallbackQuery, state: FSMContext
     alarm = bot_state.active_alarms.get(item_id)
     if not alarm:
         logger.warning(f"[{call.from_user.id}] Сбой {item_id} не найден")
-        await call.message.answer("❌ Сбой не найден")
+        await call.message.edit_text("❌ Сбой не найден", reply_markup=None)
+        await call.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
         await call.answer()
         return
 
     fix_time_value = alarm.get("fix_time")
-    logger.debug(f"[{item_id}] fix_time: {repr(fix_time_value)}, type: {type(fix_time_value)}")
-
     old_end = None
+
     if isinstance(fix_time_value, str):
         try:
             old_end = datetime.fromisoformat(fix_time_value)
         except ValueError:
             logger.error(f"[{call.from_user.id}] Неверный формат времени у сбоя {item_id}")
-            await call.message.answer("❌ Неверный формат времени")
+            await call.message.edit_text("❌ Неверный формат времени", reply_markup=None)
+            await call.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
             await call.answer()
             return
     elif isinstance(fix_time_value, datetime):
         old_end = fix_time_value
     else:
         logger.warning(f"[{call.from_user.id}] Некорректное значение fix_time для сбоя {item_id}")
-        await call.message.answer("❌ Некорректное время завершения")
+        await call.message.edit_text("❌ Некорректное время завершения", reply_markup=None)
+        await call.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
         await call.answer()
         return
 
@@ -246,7 +261,8 @@ async def handle_alarm_extension_callback(call: CallbackQuery, state: FSMContext
     elif duration == "extend_cancel":
         logger.info(f"[{call.from_user.id}] Продление отменено пользователем")
         await state.clear()
-        await call.message.edit_text("🚫 Продление отменено")
+        await call.message.edit_text("🚫 Продление отменено", reply_markup=None)
+        await call.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
         await call.answer()
         return
     else:
@@ -261,12 +277,13 @@ async def handle_alarm_extension_callback(call: CallbackQuery, state: FSMContext
     text = (
         f"🔄 <b>Сбой продлён</b>\n"
         f"• <b>Проблема:</b> {alarm['issue']}\n"
-        f"• <b>Новое время окончания:</b> {new_end.strftime('%d.%m.%Y %H:%M')}\n"
+        f"• <b>Новое время окончания:</b> {new_end.strftime('%d.%m.%Y %H:%M')}"
     )
-
     await call.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], text, parse_mode="HTML")
     logger.info(f"[{call.from_user.id}] Сообщение о продлении отправлено в канал")
-    await call.message.edit_text(f"🕒 Сбой {item_id} продлён до {new_end.strftime('%d.%m.%Y %H:%M')}")
+
+    await call.message.edit_text(f"🕒 Сбой {item_id} продлён до {new_end.strftime('%d.%m.%Y %H:%M')}", reply_markup=None)
+    await call.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
     await bot_state.save_state()
     logger.info(f"[{call.from_user.id}] Сохранено обновлённое состояние")
     await state.clear()
@@ -296,16 +313,18 @@ async def handle_maintenance_new_end(message: Message, state: FSMContext):
         text = (
             f"🔄 <b>Работа продлена</b>\n"
             f"• <b>Описание:</b> {maint['description']}\n"
-            f"• <b>Новое время окончания:</b> {new_time.strftime('%d.%m.%Y %H:%M')}\n"
+            f"• <b>Новое время окончания:</b> {new_time.strftime('%d.%m.%Y %H:%M')}"
         )
-
         await message.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], text, parse_mode="HTML")
         logger.info(f"[{message.from_user.id}] Сообщение о продлении работы отправлено в канал")
+
         await message.answer(f"🕒 Работа {item_id} продлена до {new_time.strftime('%d.%m.%Y %H:%M')}")
         await bot_state.save_state()
         logger.info(f"[{message.from_user.id}] Сохранено обновлённое состояние")
         await state.clear()
         logger.info(f"[{message.from_user.id}] FSM очищена после продления")
+        await message.answer("Выберите действие:", reply_markup=create_main_keyboard())
+
     except ValueError:
         logger.warning(f"[{message.from_user.id}] Неверный формат даты: {new_time_str}")
         await message.answer("❌ Неверный формат даты. Используйте: dd.mm.yyyy hh:mm")
@@ -350,6 +369,7 @@ async def check_reminders(bot):
                             "message_id": msg.message_id
                         }
                         logger.info(f"[REMINDER] Уведомление отправлено пользователю {user_id}")
+
                     except Exception as e:
                         logger.error(f"[REMINDER] Ошибка отправки уведомления: {e}")
                         alarm["reminded"] = False
@@ -368,6 +388,7 @@ async def handle_reminder_action(call: CallbackQuery, state: FSMContext):
     action = call.data.split("_", 1)[1]  # ✅ Всегда вернёт "stop" или "extend"
     user_id = call.from_user.id
     user_state = bot_state.user_states.get(user_id)
+
     logger.info(f"[{user_id}] Нажата кнопка напоминания: {action}")
 
     if not user_state or user_state.get("type") != "reminder":
@@ -380,20 +401,22 @@ async def handle_reminder_action(call: CallbackQuery, state: FSMContext):
 
     if not alarm:
         logger.warning(f"[{user_id}] Сбой {alarm_id} не найден при обработке напоминания")
-        await call.message.edit_text("❌ Сбой уже завершён")
+        await call.message.edit_text("❌ Сбой уже завершён", reply_markup=None)
         if user_id in bot_state.user_states:
             del bot_state.user_states[user_id]
+        await call.answer()
         return
 
     if action == "stop":
         logger.info(f"[{user_id}] Сбой {alarm_id} остановлен по напоминанию")
         text = (
             f"✅ <b>Сбой завершён</b>\n"
-            f"• <b>Проблема:</b> {alarm['issue']}\n"
+            f"• <b>Проблема:</b> {alarm['issue']}"
         )
         del bot_state.active_alarms[alarm_id]
         await call.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], text, parse_mode="HTML")
-        await call.message.edit_text("🚫 Сбой завершён по решению автора")
+        await call.message.edit_text("🚫 Сбой завершён по решению автора", reply_markup=None)
+        await call.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
         if user_id in bot_state.user_states:
             del bot_state.user_states[user_id]
         await bot_state.save_state()
@@ -419,28 +442,31 @@ async def handle_reminder_extension(call: CallbackQuery, state: FSMContext):
 
     if not alarm:
         logger.warning(f"[{call.from_user.id}] Сбой {alarm_id} не найден при продлении")
-        await call.message.edit_text("❌ Сбой не найден")
+        await call.message.edit_text("❌ Сбой не найден", reply_markup=None)
+        await call.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
         await call.answer()
         return
 
     logger.info(f"[{call.from_user.id}] Выбрано продление сбоя {alarm_id}: {duration}")
+
     fix_time_value = alarm.get("fix_time")
     old_end = datetime.fromisoformat(fix_time_value) if isinstance(fix_time_value, str) else fix_time_value
     delta = timedelta(minutes=30) if duration == "extend_30_min" else timedelta(hours=1)
-
     new_end = old_end + delta
     alarm["fix_time"] = new_end.isoformat()
+
     logger.info(f"[{call.from_user.id}] Новое время окончания: {new_end.isoformat()}")
 
     text = (
         f"🔄 <b>Сбой продлён</b>\n"
         f"• <b>Проблема:</b> {alarm['issue']}\n"
-        f"• <b>Новое время окончания:</b> {new_end.strftime('%d.%m.%Y %H:%M')}\n"
+        f"• <b>Новое время окончания:</b> {new_end.strftime('%d.%m.%Y %H:%M')}"
     )
-
     await call.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], text, parse_mode="HTML")
     logger.info(f"[{call.from_user.id}] Сообщение о продлении отправлено в канал")
-    await call.message.edit_text(f"🕒 Сбой {alarm_id} продлён до {new_end.strftime('%d.%m.%Y %H:%M')}")
+
+    await call.message.edit_text(f"🕒 Сбой {alarm_id} продлён до {new_end.strftime('%d.%m.%Y %H:%M')}", reply_markup=None)
+    await call.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
     await bot_state.save_state()
     logger.info(f"[{call.from_user.id}] Сохранено состояние после продления")
     await state.clear()

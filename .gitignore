@@ -177,4 +177,6 @@ handlers/config.json
 config.json
 screenshot.png
 screenshot.png
+data/state.json
+config.json
 .cursorrules

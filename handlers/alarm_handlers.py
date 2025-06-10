@@ -6,15 +6,21 @@ from datetime import datetime as dt, timedelta
 from typing import Optional
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.utils.keyboard import InlineKeyboardMarkup, InlineKeyboardButton, InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram import Bot
 
 # Импорты из ваших модулей
-from keyboards import create_cancel_keyboard, create_main_keyboard, create_message_type_keyboard, \
-    create_confirmation_keyboard, create_level_keyboard, create_service_keyboard
+from keyboards import (
+    create_cancel_keyboard,
+    create_main_keyboard,
+    create_message_type_keyboard,
+    create_confirmation_keyboard,
+    create_level_keyboard,
+    create_service_keyboard
+)
 from utils.helpers import NewMessageStates, parse_duration, get_user_name, is_admin
 from bot_state import bot_state
 from config import CONFIG, PROBLEM_LEVELS, PROBLEM_SERVICES, INFLUENCE_OPTIONS
@@ -45,12 +51,10 @@ class NewMessageStates(StatesGroup):
 async def new_message_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     logger.info(f"[{user_id}] Пользователь начал создание нового сообщения")
-
     if not is_admin(user_id):
         logger.warning(f"[{user_id}] Попытка начать создание сообщения без прав администратора")
         await message.answer("❌ У вас нет прав для выполнения этой команды", parse_mode='HTML')
         return
-
     await state.clear()
     logger.info(f"[{user_id}] Состояние очищено")
     await message.answer("Выберите тип сообщения:", reply_markup=create_message_type_keyboard())
@@ -61,7 +65,6 @@ async def new_message_start(message: Message, state: FSMContext):
 async def handle_message_type(call: CallbackQuery, state: FSMContext):
     msg_type = call.data.split("_")[-1]  # 'alarm', 'maintenance', 'regular'
     logger.info(f"[{call.from_user.id}] Выбран тип сообщения: {msg_type}")
-
     if msg_type == "alarm":
         await state.set_state(NewMessageStates.ENTER_TITLE)
         await call.message.answer("✏️ Введите заголовок проблемы:", reply_markup=create_cancel_keyboard())
@@ -71,7 +74,6 @@ async def handle_message_type(call: CallbackQuery, state: FSMContext):
     elif msg_type == "regular":
         await state.set_state(NewMessageStates.ENTER_MESSAGE_TEXT)
         await call.message.answer("💬 Введите текст сообщения:", reply_markup=create_cancel_keyboard())
-
     await state.update_data(type=msg_type)
     await call.answer()
 
@@ -81,13 +83,11 @@ async def enter_title(message: Message, state: FSMContext):
     title = message.text.strip()
     user_id = message.from_user.id
     logger.info(f"[{user_id}] Введен заголовок: {title[:30]}...")
-
     if title == "❌ Отмена":
         logger.info(f"[{user_id}] Действие отменено пользователем")
         await state.clear()
         await message.answer("🚫 Действие отменено", reply_markup=create_main_keyboard())
         return
-
     await state.update_data(title=title)
     await state.set_state(NewMessageStates.ENTER_DESCRIPTION)
     await message.answer("✏️ Опишите проблему подробно:", reply_markup=create_cancel_keyboard())
@@ -98,16 +98,13 @@ async def enter_description(message: Message, state: FSMContext):
     description = message.text.strip()
     user_id = message.from_user.id
     logger.info(f"[{user_id}] Введено описание: {description[:30]}...")
-
     if description == "❌ Отмена":
         logger.info(f"[{user_id}] Действие отменено пользователем")
         await state.clear()
         await message.answer("🚫 Действие отменено", reply_markup=create_main_keyboard())
         return
-
     await state.update_data(description=description)
     data = await state.get_data()
-
     if data["type"] == "alarm":
         # Автоматически устанавливаем уровень
         await state.update_data(level="Потенциальная недоступность сервиса")
@@ -140,18 +137,15 @@ async def process_service(callback: CallbackQuery, state: FSMContext):
     service_index = int(callback.data.replace("svc_", ""))
     service = PROBLEM_SERVICES[service_index]
     await state.update_data(service=service)
-    
     # Автоматически устанавливаем время +1 час от текущего
     now = dt.now()
     fix_time = now + timedelta(hours=1)
     await state.update_data(fix_time=fix_time.isoformat())
-    
     # Показываем предварительный просмотр
     data = await state.get_data()
     title = data["title"]
     description = data["description"]
     service = data["service"]
-    
     preview_text = (
         "📄 <b>Предварительный просмотр:</b>\n"
         f"🚨 <b>Технический сбой</b>\n"
@@ -160,17 +154,15 @@ async def process_service(callback: CallbackQuery, state: FSMContext):
         f"• <b>Сервис:</b> {service}\n"
         f"• <b>Исправим до:</b> {fix_time.strftime(DATETIME_FORMAT)}"
     )
-
     await state.update_data(preview_text=preview_text)
-    
+
     # Создаем встроенную клавиатуру для подтверждения
     builder = InlineKeyboardBuilder()
-    builder.button(text="✅ Отправить", callback_data="confirm")
-    builder.button(text="❌ Отмена", callback_data="cancel")
-    
+    builder.button(text="✅ Отправить", callback_data="confirm_send")
+    builder.button(text="❌ Отмена", callback_data="confirm_cancel")
     await callback.message.edit_text(
-        preview_text, 
-        parse_mode='HTML', 
+        preview_text,
+        parse_mode='HTML',
         reply_markup=builder.as_markup()
     )
     await state.set_state(NewMessageStates.CONFIRMATION)
@@ -181,25 +173,21 @@ async def enter_start_time(message: Message, state: FSMContext):
     time_str = message.text.strip()
     user_id = message.from_user.id
     logger.info(f"[{user_id}] Введено время начала: {time_str}")
-
     if time_str == "❌ Отмена":
         logger.info(f"[{user_id}] Отмена на этапе ENTER_START_TIME")
         await state.clear()
         await message.answer("🚫 Действие отменено", reply_markup=create_main_keyboard())
         return
-
     try:
         start_time = dt.strptime(time_str, DATETIME_FORMAT)
         await state.update_data(start_time=start_time.isoformat())
         logger.debug(f"[{user_id}] Время начала установлено: {start_time.isoformat()}")
-
         await message.answer(
             "⌛ Введите время окончания работ в формате:\n"
             "• Например: «27.05.2025 16:00»",
             reply_markup=create_cancel_keyboard()
         )
         await state.set_state(NewMessageStates.ENTER_END_TIME)
-
     except ValueError as e:
         logger.warning(f"[{user_id}] Неверный формат даты: {e}")
         await message.answer(
@@ -215,21 +203,17 @@ async def enter_end_time(message: Message, state: FSMContext):
     time_str = message.text.strip()
     user_id = message.from_user.id
     logger.info(f"[{user_id}] Введено время окончания: {time_str}")
-
     if time_str == "❌ Отмена":
         logger.info(f"[{user_id}] Отмена на этапе ENTER_END_TIME")
         await state.clear()
         await message.answer("🚫 Действие отменено", reply_markup=create_main_keyboard())
         return
-
     try:
         data = await state.get_data()
         start_time = dt.fromisoformat(data["start_time"])
         end_time = dt.strptime(time_str, DATETIME_FORMAT)
-
         if end_time < start_time:
             raise ValueError("Время окончания не может быть раньше начала")
-
         await state.update_data(end_time=end_time.isoformat())
         logger.debug(f"[{user_id}] Время окончания установлено: {end_time.isoformat()}")
         await message.answer(
@@ -237,7 +221,6 @@ async def enter_end_time(message: Message, state: FSMContext):
             reply_markup=create_cancel_keyboard()
         )
         await state.set_state(NewMessageStates.ENTER_UNAVAILABLE_SERVICES)
-
     except ValueError as e:
         logger.error(f"[{user_id}] Ошибка при парсинге времени окончания: {str(e)}", exc_info=True)
         await message.answer(
@@ -253,20 +236,17 @@ async def enter_unavailable_services(message: Message, state: FSMContext):
     services = message.text.strip()
     user_id = message.from_user.id
     logger.info(f"[{user_id}] Введены недоступные сервисы: {services[:30]}...")
-
     if services == "❌ Отмена":
         logger.info(f"[{user_id}] Отмена на этапе ENTER_UNAVAILABLE_SERVICES")
         await state.clear()
         await message.answer("🚫 Действие отменено", reply_markup=create_main_keyboard())
         return
-
     await state.update_data(unavailable_services=services)
     data = await state.get_data()
     title = data["title"]
     description = data["description"]
     start_time = dt.fromisoformat(data["start_time"])
     end_time = dt.fromisoformat(data["end_time"])
-
     preview_text = (
         "📄 <b>Предварительный просмотр:</b>\n"
         f"🔧 <b>Регламентные работы</b>\n"
@@ -276,7 +256,6 @@ async def enter_unavailable_services(message: Message, state: FSMContext):
         f"• <b>Конец:</b> {end_time.strftime(DATETIME_FORMAT)}\n"
         f"• <b>Недоступно:</b> {services}"
     )
-
     await state.update_data(preview_text=preview_text)
     await message.answer(preview_text, parse_mode='HTML', reply_markup=create_confirmation_keyboard())
     await state.set_state(NewMessageStates.CONFIRMATION)
@@ -287,212 +266,24 @@ async def enter_message_text(message: Message, state: FSMContext):
     text = message.text.strip()
     user_id = message.from_user.id
     logger.info(f"[{user_id}] Введён текст сообщения: {text[:30]}...")
-
     if text == "❌ Отмена":
         logger.info(f"[{user_id}] Отмена на этапе ENTER_MESSAGE_TEXT")
         await state.clear()
         await message.answer("🚫 Действие отменено", reply_markup=create_main_keyboard())
         return
-
     await state.update_data(message_text=text)
     logger.debug(f"[{user_id}] Текст сохранён: {text[:50]}...")
     await message.answer("✅ Подтвердите отправку", reply_markup=create_confirmation_keyboard())
     await state.set_state(NewMessageStates.CONFIRMATION)
 
 
-@router.message(NewMessageStates.CONFIRMATION)
-async def confirm_send(message: Message, state: FSMContext):
-    response = message.text.strip()
-    user_id = message.from_user.id
-    logger.info(f"[{user_id}] Получен ответ подтверждения: {response}")
-
-    if response == "Не отправлять":
-        logger.info(f"[{user_id}] Отправка отменена пользователем")
-        await state.clear()
-        await message.answer("🚫 Действие отменено", reply_markup=create_main_keyboard())
-        return
-
-    elif response == "Отправить":
-        data = await message.bot.get_me()
-        bot_username = data.username
-        username = await get_user_name(user_id, message.bot)
-        data = await state.get_data()
-        msg_type = data["type"]
-
-        try:
-            if msg_type == "alarm":
-                issue = data["title"]
-                fix_time = dt.fromisoformat(data["fix_time"])
-                
-                # Пытаемся создать задачу в Jira
-                try:
-                    jira_response = create_failure_issue(
-                        summary=issue,
-                        description=data["description"],
-                        problem_level="Потенциальная недоступность сервиса",  # Устанавливаем уровень по умолчанию
-                        problem_service=data["service"],
-                        time_start_problem=dt.now().strftime("%Y-%m-%d %H:%M"),
-                        influence="Клиенты"  # Можно добавить выбор влияния в будущем
-                    )
-                    
-                    if jira_response and 'key' in jira_response:
-                        alarm_id = jira_response['key']  # Используем ID из Jira
-                        jira_url = f"https://jira.petrovich.tech/browse/{alarm_id}"
-                        logger.info(f"[{user_id}] Задача в Jira создана: {alarm_id}")
-                    else:
-                        raise Exception("Не удалось получить ID задачи из Jira")
-                        
-                except Exception as jira_error:
-                    logger.error(f"[{user_id}] Ошибка создания задачи в Jira: {str(jira_error)}")
-                    # Если не удалось создать в Jira, используем старый механизм
-                    alarm_id = str(uuid.uuid4())[:4]
-                    jira_url = None
-                    logger.info(f"[{user_id}] Используем локальный ID: {alarm_id}")
-
-                bot_state.active_alarms[alarm_id] = {
-                    "issue": issue,
-                    "fix_time": fix_time,
-                    "user_id": user_id,
-                    "created_at": dt.now().isoformat()
-                }
-
-                # Базовый текст сообщения
-                base_text = (
-                    f"🚨 <b>Сбой</b>\n"
-                    f"• <b>ID:</b> <code>{alarm_id}</code>\n"
-                    f"• <b>Заголовок:</b> {data['title']}\n"
-                    f"• <b>Описание:</b> {data['description']}\n"
-                    f"• <b>Уровень:</b> {data['level']}\n"
-                    f"• <b>Сервис:</b> {data['service']}\n"
-                    f"• <b>Исправим до:</b> {fix_time.strftime(DATETIME_FORMAT)}\n"
-                    f"• <b>Автор:</b> {username}\n"
-                    f"• <i>Инженеры уже работают над решением!</i>"
-                )
-
-                # Сообщение для чата (без ID, автора и описания)
-                chat_message = (
-                    f"🚨 <b>Сбой</b>\n"
-                    f"• <b>Заголовок:</b> {data['title']}\n"
-                    f"• <b>Уровень:</b> {data['level']}\n"
-                    f"• <b>Сервис:</b> {data['service']}\n"
-                    f"• <b>Исправим до:</b> {fix_time.strftime(DATETIME_FORMAT)}\n"
-                    f"• <i>Инженеры уже работают над решением!</i>"
-                )
-                await message.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], chat_message, parse_mode='HTML')
-
-                # Сообщение для темы (со ссылкой на Jira, если есть)
-                topic_message = base_text
-                if jira_url:
-                    topic_message += f"\n• <b>Задача в Jira:</b> <a href='{jira_url}'>{alarm_id}</a>"
-
-                scm_channel_id = CONFIG["TELEGRAM"].get("SCM_CHANNEL_ID")
-                if scm_channel_id:
-                    topic = await message.bot.create_forum_topic(chat_id=scm_channel_id, name=f"{alarm_id} {data['title'][:20]}...")
-                    await message.bot.send_message(
-                        chat_id=scm_channel_id,
-                        message_thread_id=topic.message_thread_id,
-                        text=topic_message,
-                        parse_mode='HTML'
-                    )
-                    logger.info(f"[{user_id}] Тема создана: {topic.message_thread_id}")
-
-                # Сообщение для пользователя
-                user_message = f"✅ Сбой зарегистрирован! ID: <code>{alarm_id}</code>"
-                if jira_url:
-                    user_message += f"\n🔗 <a href='{jira_url}'>Задача в Jira</a>"
-
-                logger.info(f"[{user_id}] Сбой {alarm_id} успешно зарегистрирован")
-                await message.answer(
-                    user_message,
-                    parse_mode='HTML',
-                    reply_markup=create_main_keyboard()
-                )
-                await bot_state.save_state()
-                await state.clear()
-
-            elif msg_type == "maintenance":
-                work_id = str(uuid.uuid4())[:4]
-                description = data["description"]
-                start_time = dt.fromisoformat(data["start_time"])
-                end_time = dt.fromisoformat(data["end_time"])
-                unavailable_services = data.get("unavailable_services", "не указано")
-
-                bot_state.active_maintenances[work_id] = {
-                    "description": description,
-                    "start_time": start_time,
-                    "end_time": end_time,
-                    "unavailable_services": unavailable_services,
-                    "user_id": user_id,
-                    "created_at": dt.now().isoformat()
-                }
-
-                maint_text = (
-                    f"🔧 <b>Регламентные работы</b>\n"
-                    f"• <b>ID:</b> <code>{work_id}</code>\n"
-                    f"• <b>Описание:</b> {description}\n"
-                    f"• <b>Начало:</b> {start_time.strftime(DATETIME_FORMAT)}\n"
-                    f"• <b>Конец:</b> {end_time.strftime(DATETIME_FORMAT)}\n"
-                    f"• <b>Недоступно:</b> {unavailable_services}\n"
-                    f"• <b>Автор:</b> {username}"
-                )
-
-                await message.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], maint_text, parse_mode='HTML')
-                logger.info(f"[{user_id}] Работа {work_id} зарегистрирована")
-
-                await message.answer(
-                    f"✅ Работы зарегистрированы! ID: <code>{work_id}</code>",
-                    parse_mode='HTML',
-                    reply_markup=create_main_keyboard()
-                )
-                await bot_state.save_state()
-                await state.clear()
-
-            elif msg_type == "regular":
-                message_text = data["message_text"]
-                regular_text = (
-                    f"💬 <b>Обычное сообщение</b>\n"
-                    f"{message_text}\n"
-                    f"• <b>Автор:</b> {username}"
-                )
-
-                await message.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], regular_text, parse_mode='HTML')
-                logger.info(f"[{user_id}] Обычное сообщение отправлено в канал")
-
-                await message.answer(
-                    "✅ Сообщение отправлено",
-                    reply_markup=create_main_keyboard()
-                )
-                await bot_state.save_state()
-                await state.clear()
-
-            else:
-                logger.warning(f"[{user_id}] Неизвестный тип сообщения: {msg_type}")
-                await message.answer("❌ Неизвестный тип сообщения", reply_markup=create_main_keyboard())
-                await state.clear()
-
-        except Exception as e:
-            logger.error(f"[{user_id}] Ошибка при завершении отправки: {str(e)}", exc_info=True)
-            await message.answer("❌ Не удалось отправить сообщение", reply_markup=create_main_keyboard())
-            await state.clear()
-
-    else:
-        logger.warning(f"[{user_id}] Некорректный ответ: {response}")
-        data = await state.get_data()
-        preview_text = data.get("preview_text", "")
-        if preview_text:
-            await message.answer(preview_text, parse_mode='HTML', reply_markup=create_confirmation_keyboard())
-        else:
-            await message.answer(
-                "⚠️ Пожалуйста, выберите «Отправить» или «Не отправлять»",
-                reply_markup=create_confirmation_keyboard()
-            )
+# Удалена функция confirm_send(message: Message, ...), так как используется только callback
 
 
-@router.callback_query(F.data == "confirm")
+@router.callback_query(F.data == "confirm_send")
 async def confirm_send_callback(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
     logger.info(f"[{user_id}] Подтверждение отправки через callback")
-    
     data = await state.get_data()
     msg_type = data["type"]
 
@@ -500,7 +291,6 @@ async def confirm_send_callback(callback: CallbackQuery, state: FSMContext):
         if msg_type == "alarm":
             issue = data["title"]
             fix_time = dt.fromisoformat(data["fix_time"])
-            
             # Пытаемся создать задачу в Jira
             try:
                 jira_response = create_failure_issue(
@@ -511,14 +301,12 @@ async def confirm_send_callback(callback: CallbackQuery, state: FSMContext):
                     time_start_problem=dt.now().strftime("%Y-%m-%d %H:%M"),
                     influence="Клиенты"
                 )
-                
                 if jira_response and 'key' in jira_response:
                     alarm_id = jira_response['key']
                     jira_url = f"https://jira.petrovich.tech/browse/{alarm_id}"
                     logger.info(f"[{user_id}] Задача в Jira создана: {alarm_id}")
                 else:
                     raise Exception("Не удалось получить ID задачи из Jira")
-                    
             except Exception as jira_error:
                 logger.error(f"[{user_id}] Ошибка создания задачи в Jira: {str(jira_error)}")
                 alarm_id = str(uuid.uuid4())[:4]
@@ -532,74 +320,111 @@ async def confirm_send_callback(callback: CallbackQuery, state: FSMContext):
                 "created_at": dt.now().isoformat()
             }
 
-            # Базовый текст сообщения
             base_text = (
                 f"🚨 <b>Технический сбой</b>\n"
-                f"Добрый день, коллеги\n"
+                f"• <b>Задача в Jira:</b> <a href='{jira_url}'>{alarm_id}</a>\n"
+                f"• <b>Сервис:</b> {data['service']}\n"
                 f"• <b>Проблема:</b> {data['title']}\n"
                 f"• <b>Описание:</b> {data['description']}\n"
-                f"• <b>Сервис:</b> {data['service']}\n"
-                f"• <b>Исправим до:</b> {fix_time.strftime(DATETIME_FORMAT)}\n"
-                f"• <i>Мы уже работаем над устранением сбоя. Спасибо за ваше терпение и понимание!</i>"
+                f"• <i>Ссылка в Ктолк: https://petrovich.ktalk.ru/emergencyteam  </i>\n"
             )
 
-            # Сообщение для чата (без ID, автора и описания)
             chat_message = (
                 f"🚨 <b>Технический сбой</b>\n"
-                f"Добрый день, коллеги\n"
                 f"• <b>Проблема:</b> {data['title']}\n"
                 f"• <b>Сервис:</b> {data['service']}\n"
                 f"• <b>Исправим до:</b> {fix_time.strftime(DATETIME_FORMAT)}\n"
                 f"• <i>Мы уже работаем над устранением сбоя. Спасибо за ваше терпение и понимание!</i>"
             )
-            await callback.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], chat_message, parse_mode='HTML')
 
-            # Сообщение для темы (со ссылкой на Jira, если есть)
-            topic_message = base_text
-            if jira_url:
-                topic_message += f"\n• <b>Задача в Jira:</b> <a href='{jira_url}'>{alarm_id}</a>"
+            await callback.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], chat_message, parse_mode='HTML')
 
             scm_channel_id = CONFIG["TELEGRAM"].get("SCM_CHANNEL_ID")
             if scm_channel_id:
-                topic = await callback.bot.create_forum_topic(chat_id=scm_channel_id, name=f"{alarm_id} {data['title'][:20]}...")
+                topic = await callback.bot.create_forum_topic(chat_id=scm_channel_id, name=f"🔥{alarm_id} {data['title'][:20]}...")
                 await callback.bot.send_message(
                     chat_id=scm_channel_id,
                     message_thread_id=topic.message_thread_id,
-                    text=topic_message,
+                    text=base_text,
                     parse_mode='HTML'
                 )
                 logger.info(f"[{user_id}] Тема создана: {topic.message_thread_id}")
 
-            # Сообщение для пользователя
             user_message = f"✅ Сбой зарегистрирован! ID: <code>{alarm_id}</code>"
             if jira_url:
                 user_message += f"\n🔗 <a href='{jira_url}'>Задача в Jira</a>"
 
-            logger.info(f"[{user_id}] Сбой {alarm_id} успешно зарегистрирован")
+            await callback.message.edit_text(user_message, parse_mode='HTML', reply_markup=None)
+            await bot_state.save_state()
+            await state.clear()
+
+        elif msg_type == "maintenance":
+            work_id = str(uuid.uuid4())[:4]
+            description = data["description"]
+            start_time = dt.fromisoformat(data["start_time"])
+            end_time = dt.fromisoformat(data["end_time"])
+            unavailable_services = data.get("unavailable_services", "не указано")
+
+            bot_state.active_maintenances[work_id] = {
+                "description": description,
+                "start_time": start_time,
+                "end_time": end_time,
+                "unavailable_services": unavailable_services,
+                "user_id": user_id,
+                "created_at": dt.now().isoformat()
+            }
+
+            maint_text = (
+                f"🔧 <b>Проводим плановые технические работы – станет ещё лучше!</b>\n"
+                f"• <b>Описание:</b> {description}\n"
+                f"• <b>Начало:</b> {start_time.strftime(DATETIME_FORMAT)}\n"
+                f"• <b>Конец:</b> {end_time.strftime(DATETIME_FORMAT)}\n"
+                f"• <b>Недоступно:</b> {unavailable_services}\n"
+                f"• <i>Спасибо за понимание! Эти изменения – важный шаг к тому, чтобы сервис стал ещё удобнее и надёжнее для вас 💙</i>\n"
+                f"• <i>Если возникнут вопросы – наша поддержка всегда на связи</i>\n"
+                f"• <i>С заботой, Ваша команда Петрович-ТЕХ</i>"
+            )
+
+            await callback.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], maint_text, parse_mode='HTML')
+            logger.info(f"[{user_id}] Работа {work_id} зарегистрирована")
             await callback.message.edit_text(
-                user_message,
+                f"✅ Работы зарегистрированы! ID: <code>{work_id}</code>",
                 parse_mode='HTML',
                 reply_markup=None
             )
             await bot_state.save_state()
             await state.clear()
 
+        elif msg_type == "regular":
+            message_text = data["message_text"]
+            regular_text = (
+                f"💬 <b>Сообщение от администратора:</b>\n"
+                f"{message_text}\n"
+            )
+            await callback.bot.send_message(CONFIG["TELEGRAM"]["ALARM_CHANNEL_ID"], regular_text, parse_mode='HTML')
+            logger.info(f"[{user_id}] Обычное сообщение отправлено в канал")
+            await callback.message.edit_text(
+                "✅ Сообщение отправлено",
+                reply_markup=None
+            )
+            await bot_state.save_state()
+            await state.clear()
+
+        else:
+            logger.warning(f"[{user_id}] Неизвестный тип сообщения: {msg_type}")
+            await callback.message.edit_text("❌ Неизвестный тип сообщения", reply_markup=None)
+            await state.clear()
+
     except Exception as e:
         logger.error(f"[{user_id}] Ошибка при завершении отправки: {str(e)}", exc_info=True)
-        await callback.message.edit_text(
-            "❌ Не удалось отправить сообщение",
-            reply_markup=None
-        )
+        await callback.message.edit_text("❌ Не удалось отправить сообщение", reply_markup=None)
         await state.clear()
 
 
-@router.callback_query(F.data == "cancel")
+@router.callback_query(F.data == "confirm_cancel")
 async def cancel_send_callback(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
     logger.info(f"[{user_id}] Отмена отправки через callback")
     await state.clear()
-    await callback.message.edit_text(
-        "🚫 Действие отменено",
-        reply_markup=None
-    )
+    await callback.message.edit_text("🚫 Действие отменено", reply_markup=None)
     await callback.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
