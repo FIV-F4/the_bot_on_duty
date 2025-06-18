@@ -1,0 +1,27 @@
+{
+  "expand": "projects",
+  "projects": [
+    {
+      "self": "https://jira.petrovich.tech/rest/api/2/project/15416",
+      "id": "15416",
+      "key": "SCHED",
+      "name": "ScheduleSD",
+      "avatarUrls": {
+        "48x48": "https://jira.petrovich.tech/secure/projectavatar?pid=15416&avatarId=19626",
+        "24x24": "https://jira.petrovich.tech/secure/projectavatar?size=small&pid=15416&avatarId=19626",
+        "16x16": "https://jira.petrovich.tech/secure/projectavatar?size=xsmall&pid=15416&avatarId=19626",
+        "32x32": "https://jira.petrovich.tech/secure/projectavatar?size=medium&pid=15416&avatarId=19626"
+      },
+      "issuetypes": [
+        {
+          "self": "https://jira.petrovich.tech/rest/api/2/issuetype/10408",
+          "id": "10408",
+          "description": "Создано с помощью службы поддержки JIRA.",
+          "iconUrl": "https://jira.petrovich.tech/secure/viewavatar?size=xsmall&avatarId=11901&avatarType=issuetype",
+          "name": "Сервисный запрос",
+          "subtask": false
+        }
+      ]
+    }
+  ]
+}
