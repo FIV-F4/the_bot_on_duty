@@ -22,7 +22,10 @@ async def create_technical_issue(
     client: JiraApiClient,
     employee_name: str,
     manager_name: str,
-    description: str = ""
+    description: str = "",
+    date: str = "",
+    start_time: str = "",
+    problem_side: str = ""
 ) -> dict:
     """Создает заявку о технической неполадке в JIRA Service Desk."""
     project_key = "SCHED"
@@ -34,6 +37,7 @@ async def create_technical_issue(
     description = f"""
 Сотрудник: {employee_name}
 Руководитель: {manager_name}
+Описание: {description}
     """.strip()
 
     fields = {
@@ -42,8 +46,24 @@ async def create_technical_issue(
         "summary": "Тех. неполадка",
         "description": description,
         "assignee": {"name": assignee_name},
-        "labels": ["чатбот"]
+        "labels": ["чатбот"],
+        "priority": {"id": "3"}
     }
+
+    # Добавляем кастомные поля если они предоставлены
+    if date:
+        fields["customfield_17429"] = date  # Дата
+    
+    if start_time:
+        fields["customfield_17430"] = start_time  # Время начала
+    
+    if problem_side:
+        # Преобразуем текстовое описание в ID значения
+        if "оператора" in problem_side.lower():
+            fields["customfield_17432"] = {"id": "18046"}  # Проблема на стороне оператора
+        elif "компании" in problem_side.lower():
+            fields["customfield_17432"] = {"id": "18047"}  # Проблема со стороны компании
+
     return await client.create_issue({"fields": fields})
 
 
@@ -51,7 +71,9 @@ async def create_sick_leave(
     client: JiraApiClient,
     employee_name: str,
     manager_name: str,
-    description: str = ""
+    description: str = "",
+    open_date: str = "",
+    for_who: str = ""
 ) -> dict:
     """Создает заявку о больничном в JIRA Service Desk."""
     project_key = "SCHED"
@@ -72,8 +94,21 @@ async def create_sick_leave(
         "summary": "Больничный",
         "description": description,
         "assignee": {"name": assignee_name},
-        "labels": ["чатбот"]
+        "labels": ["чатбот"],
+        "priority": {"id": "3"}
     }
+
+    # Добавляем обязательные кастомные поля
+    if open_date:
+        fields["customfield_17429"] = open_date  # Дата открытия
+    
+    if for_who:
+        # Преобразуем текстовое описание в ID значения
+        if "уход" in for_who.lower():
+            fields["customfield_16004"] = {"id": "18027"}  # По уходу за больным
+        elif "себя" in for_who.lower():
+            fields["customfield_16004"] = {"id": "18028"}  # На себя
+
     return await client.create_issue({"fields": fields})
 
 

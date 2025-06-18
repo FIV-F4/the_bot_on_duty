@@ -1,0 +1,570 @@
+{
+  "_key": "SCHED-143316",
+  "_summary": "Больничный",
+  "_description": "Тест",
+  "_status": "Решен",
+  "_assignee": "Графики работ. Первая линия",
+  "_created": "2025-06-09 16:19:47.195000+03:00",
+  "_updated": "2025-06-09 18:58:25.373000+03:00",
+  "_raw_data": {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "1003573",
+    "self": "https://jira.petrovich.tech/rest/api/2/issue/1003573",
+    "key": "SCHED-143316",
+    "fields": {
+      "customfield_15400": null,
+      "resolution": {
+        "self": "https://jira.petrovich.tech/rest/api/2/resolution/10000",
+        "id": "10000",
+        "description": "Работы по тикету завершены",
+        "name": "Готово"
+      },
+      "customfield_13103": null,
+      "customfield_10500": {
+        "_links": {
+          "jiraRest": "https://jira.petrovich.tech/rest/api/2/issue/1003573",
+          "web": "https://jira.petrovich.tech/servicedesk/customer/portal/55/SCHED-143316",
+          "self": "https://jira.petrovich.tech/rest/servicedeskapi/request/1003573"
+        },
+        "requestType": {
+          "id": "926",
+          "_links": {
+            "self": "https://jira.petrovich.tech/rest/servicedeskapi/servicedesk/55/requesttype/926"
+          },
+          "name": "Больничный",
+          "description": "",
+          "helpText": "",
+          "serviceDeskId": "55",
+          "groupIds": [
+            "207",
+            "209"
+          ],
+          "icon": {
+            "id": "19627",
+            "_links": {
+              "iconUrls": {
+                "48x48": "https://jira.petrovich.tech/secure/viewavatar?avatarType=SD_REQTYPE&size=large&avatarId=19627",
+                "24x24": "https://jira.petrovich.tech/secure/viewavatar?avatarType=SD_REQTYPE&size=small&avatarId=19627",
+                "16x16": "https://jira.petrovich.tech/secure/viewavatar?avatarType=SD_REQTYPE&size=xsmall&avatarId=19627",
+                "32x32": "https://jira.petrovich.tech/secure/viewavatar?avatarType=SD_REQTYPE&size=medium&avatarId=19627"
+              }
+            }
+          }
+        },
+        "currentStatus": {
+          "status": "Решен",
+          "statusDate": {
+            "iso8601": "2025-06-09T16:27:30+0300",
+            "jira": "2025-06-09T16:27:30.485+0300",
+            "friendly": "09/июн/25 16:27",
+            "epochMillis": 1749475650485
+          }
+        }
+      },
+      "customfield_10501": [
+        {
+          "self": "https://jira.petrovich.tech/rest/api/2/user?username=iv.frolov",
+          "name": "iv.frolov",
+          "key": "JIRAUSER21578",
+          "emailAddress": "iv.frolov@petrovich.tech",
+          "avatarUrls": {
+            "48x48": "https://jira.petrovich.tech/secure/useravatar?ownerId=JIRAUSER21578&avatarId=14931",
+            "24x24": "https://jira.petrovich.tech/secure/useravatar?size=small&ownerId=JIRAUSER21578&avatarId=14931",
+            "16x16": "https://jira.petrovich.tech/secure/useravatar?size=xsmall&ownerId=JIRAUSER21578&avatarId=14931",
+            "32x32": "https://jira.petrovich.tech/secure/useravatar?size=medium&ownerId=JIRAUSER21578&avatarId=14931"
+          },
+          "displayName": "Фролов Иван",
+          "active": true,
+          "timeZone": "Europe/Moscow"
+        }
+      ],
+      "customfield_10502": null,
+      "customfield_10503": null,
+      "customfield_10504": null,
+      "customfield_10505": null,
+      "lastViewed": null,
+      "customfield_12000": "{}",
+      "customfield_16600": null,
+      "labels": [],
+      "customfield_11700": null,
+      "customfield_15629": null,
+      "customfield_11702": null,
+      "customfield_11701": null,
+      "aggregatetimeoriginalestimate": null,
+      "issuelinks": [],
+      "assignee": {
+        "self": "https://jira.petrovich.tech/rest/api/2/user?username=firstline.ws%40petrovich.ru",
+        "name": "firstline.ws@petrovich.ru",
+        "key": "JIRAUSER26111",
+        "emailAddress": "firstline.ws@petrovich.ru",
+        "avatarUrls": {
+          "48x48": "https://jira.petrovich.tech/secure/useravatar?avatarId=10349",
+          "24x24": "https://jira.petrovich.tech/secure/useravatar?size=small&avatarId=10349",
+          "16x16": "https://jira.petrovich.tech/secure/useravatar?size=xsmall&avatarId=10349",
+          "32x32": "https://jira.petrovich.tech/secure/useravatar?size=medium&avatarId=10349"
+        },
+        "displayName": "Графики работ. Первая линия",
+        "active": true,
+        "timeZone": "Europe/Moscow"
+      },
+      "components": [
+        {
+          "self": "https://jira.petrovich.tech/rest/api/2/component/16200",
+          "id": "16200",
+          "name": "Канивец"
+        }
+      ],
+      "customfield_15624": null,
+      "customfield_17803": null,
+      "customfield_15617": null,
+      "customfield_10600": null,
+      "customfield_11812": null,
+      "customfield_14090": null,
+      "customfield_14091": null,
+      "subtasks": [],
+      "customfield_13670": null,
+      "reporter": {
+        "self": "https://jira.petrovich.tech/rest/api/2/user?username=iv.frolov",
+        "name": "iv.frolov",
+        "key": "JIRAUSER21578",
+        "emailAddress": "iv.frolov@petrovich.tech",
+        "avatarUrls": {
+          "48x48": "https://jira.petrovich.tech/secure/useravatar?ownerId=JIRAUSER21578&avatarId=14931",
+          "24x24": "https://jira.petrovich.tech/secure/useravatar?size=small&ownerId=JIRAUSER21578&avatarId=14931",
+          "16x16": "https://jira.petrovich.tech/secure/useravatar?size=xsmall&ownerId=JIRAUSER21578&avatarId=14931",
+          "32x32": "https://jira.petrovich.tech/secure/useravatar?size=medium&ownerId=JIRAUSER21578&avatarId=14931"
+        },
+        "displayName": "Фролов Иван",
+        "active": true,
+        "timeZone": "Europe/Moscow"
+      },
+      "customfield_14089": null,
+      "customfield_15727": null,
+      "customfield_15728": null,
+      "customfield_11801": null,
+      "customfield_11800": null,
+      "customfield_11803": null,
+      "customfield_11802": null,
+      "customfield_11805": {
+        "self": "https://jira.petrovich.tech/rest/api/2/customFieldOption/11201",
+        "value": "No",
+        "id": "11201",
+        "disabled": false
+      },
+      "customfield_11804": null,
+      "customfield_17907": null,
+      "customfield_11807": {
+        "self": "https://jira.petrovich.tech/rest/api/2/customFieldOption/11203",
+        "value": "No",
+        "id": "11203",
+        "disabled": false
+      },
+      "customfield_11806": 100.0,
+      "progress": {
+        "progress": 0,
+        "total": 0
+      },
+      "votes": {
+        "self": "https://jira.petrovich.tech/rest/api/2/issue/SCHED-143316/votes",
+        "votes": 0,
+        "hasVoted": false
+      },
+      "worklog": {
+        "startAt": 0,
+        "maxResults": 20,
+        "total": 0,
+        "worklogs": []
+      },
+      "customfield_14073": null,
+      "issuetype": {
+        "self": "https://jira.petrovich.tech/rest/api/2/issuetype/10408",
+        "id": "10408",
+        "description": "Создано с помощью службы поддержки JIRA.",
+        "iconUrl": "https://jira.petrovich.tech/secure/viewavatar?size=xsmall&avatarId=11901&avatarType=issuetype",
+        "name": "Сервисный запрос",
+        "subtask": false,
+        "avatarId": 11901
+      },
+      "customfield_14070": null,
+      "customfield_14076": null,
+      "customfield_14077": null,
+      "customfield_15720": null,
+      "project": {
+        "self": "https://jira.petrovich.tech/rest/api/2/project/15416",
+        "id": "15416",
+        "key": "SCHED",
+        "name": "ScheduleSD",
+        "projectTypeKey": "service_desk",
+        "avatarUrls": {
+          "48x48": "https://jira.petrovich.tech/secure/projectavatar?pid=15416&avatarId=19626",
+          "24x24": "https://jira.petrovich.tech/secure/projectavatar?size=small&pid=15416&avatarId=19626",
+          "16x16": "https://jira.petrovich.tech/secure/projectavatar?size=xsmall&pid=15416&avatarId=19626",
+          "32x32": "https://jira.petrovich.tech/secure/projectavatar?size=medium&pid=15416&avatarId=19626"
+        }
+      },
+      "customfield_14078": null,
+      "customfield_14079": null,
+      "customfield_15721": null,
+      "customfield_15722": null,
+      "customfield_15716": null,
+      "customfield_15717": 123.0,
+      "customfield_16805": null,
+      "customfield_15715": "2025-06-09",
+      "resolutiondate": "2025-06-09T16:27:30.483+0300",
+      "customfield_15719": null,
+      "customfield_14062": null,
+      "watches": {
+        "self": "https://jira.petrovich.tech/rest/api/2/issue/SCHED-143316/watchers",
+        "watchCount": 0,
+        "isWatching": false
+      },
+      "customfield_18300": null,
+      "customfield_18301": null,
+      "customfield_14063": null,
+      "customfield_12440": null,
+      "customfield_16006": null,
+      "customfield_16005": null,
+      "customfield_10020": "1|i2umpr:",
+      "customfield_10021": null,
+      "customfield_16004": null,
+      "customfield_12441": null,
+      "customfield_14500": null,
+      "customfield_16007": null,
+      "customfield_15705": null,
+      "customfield_13646": null,
+      "customfield_15706": null,
+      "customfield_10019": null,
+      "customfield_15709": null,
+      "customfield_15708": null,
+      "updated": "2025-06-09T18:58:25.373+0300",
+      "customfield_16112": null,
+      "customfield_16111": null,
+      "customfield_16110": null,
+      "customfield_14053": null,
+      "customfield_17440": null,
+      "timeoriginalestimate": null,
+      "customfield_16116": null,
+      "description": "Тест",
+      "customfield_11221": null,
+      "customfield_12311": null,
+      "customfield_13645": null,
+      "customfield_12314": null,
+      "customfield_12313": null,
+      "timetracking": {},
+      "customfield_16117": null,
+      "customfield_10015": null,
+      "customfield_11218": null,
+      "customfield_10800": [],
+      "summary": "Больничный",
+      "customfield_14040": null,
+      "customfield_16101": null,
+      "customfield_17432": null,
+      "customfield_16100": null,
+      "customfield_17431": null,
+      "customfield_17430": null,
+      "customfield_14042": null,
+      "customfield_14047": null,
+      "customfield_16105": null,
+      "customfield_17436": null,
+      "customfield_17435": null,
+      "customfield_17434": null,
+      "customfield_16102": null,
+      "customfield_17433": {
+        "self": "https://jira.petrovich.tech/rest/api/2/customFieldOption/18045",
+        "value": "Нет",
+        "id": "18045",
+        "disabled": false
+      },
+      "customfield_16109": null,
+      "customfield_17439": null,
+      "customfield_14049": null,
+      "customfield_16107": null,
+      "customfield_17438": null,
+      "customfield_16106": null,
+      "customfield_17437": null,
+      "customfield_11204": {
+        "id": "437",
+        "name": "Время до первого отклика",
+        "_links": {
+          "self": "https://jira.petrovich.tech/rest/servicedeskapi/request/1003573/sla/437"
+        },
+        "completedCycles": [
+          {
+            "startTime": {
+              "iso8601": "2025-06-09T16:19:47+0300",
+              "jira": "2025-06-09T16:19:47.303+0300",
+              "friendly": "09/июн/25 16:19",
+              "epochMillis": 1749475187303
+            },
+            "stopTime": {
+              "iso8601": "2025-06-09T16:27:24+0300",
+              "jira": "2025-06-09T16:27:24.248+0300",
+              "friendly": "09/июн/25 16:27",
+              "epochMillis": 1749475644248
+            },
+            "breached": false,
+            "goalDuration": {
+              "millis": 10800000,
+              "friendly": "3ч"
+            },
+            "elapsedTime": {
+              "millis": 456945,
+              "friendly": "7м"
+            },
+            "remainingTime": {
+              "millis": 10343055,
+              "friendly": "2ч 52м"
+            }
+          }
+        ]
+      },
+      "environment": null,
+      "duedate": null,
+      "comment": {
+        "comments": [
+          {
+            "self": "https://jira.petrovich.tech/rest/api/2/issue/1003573/comment/2759300",
+            "id": "2759300",
+            "author": {
+              "self": "https://jira.petrovich.tech/rest/api/2/user?username=iv.frolov",
+              "name": "iv.frolov",
+              "key": "JIRAUSER21578",
+              "emailAddress": "iv.frolov@petrovich.tech",
+              "avatarUrls": {
+                "48x48": "https://jira.petrovich.tech/secure/useravatar?ownerId=JIRAUSER21578&avatarId=14931",
+                "24x24": "https://jira.petrovich.tech/secure/useravatar?size=small&ownerId=JIRAUSER21578&avatarId=14931",
+                "16x16": "https://jira.petrovich.tech/secure/useravatar?size=xsmall&ownerId=JIRAUSER21578&avatarId=14931",
+                "32x32": "https://jira.petrovich.tech/secure/useravatar?size=medium&ownerId=JIRAUSER21578&avatarId=14931"
+              },
+              "displayName": "Фролов Иван",
+              "active": true,
+              "timeZone": "Europe/Moscow"
+            },
+            "body": "\n\n!image.png|thumbnail!",
+            "updateAuthor": {
+              "self": "https://jira.petrovich.tech/rest/api/2/user?username=iv.frolov",
+              "name": "iv.frolov",
+              "key": "JIRAUSER21578",
+              "emailAddress": "iv.frolov@petrovich.tech",
+              "avatarUrls": {
+                "48x48": "https://jira.petrovich.tech/secure/useravatar?ownerId=JIRAUSER21578&avatarId=14931",
+                "24x24": "https://jira.petrovich.tech/secure/useravatar?size=small&ownerId=JIRAUSER21578&avatarId=14931",
+                "16x16": "https://jira.petrovich.tech/secure/useravatar?size=xsmall&ownerId=JIRAUSER21578&avatarId=14931",
+                "32x32": "https://jira.petrovich.tech/secure/useravatar?size=medium&ownerId=JIRAUSER21578&avatarId=14931"
+              },
+              "displayName": "Фролов Иван",
+              "active": true,
+              "timeZone": "Europe/Moscow"
+            },
+            "created": "2025-06-09T16:19:47.862+0300",
+            "updated": "2025-06-09T16:19:47.862+0300"
+          }
+        ],
+        "maxResults": 1,
+        "total": 1,
+        "startAt": 0
+      },
+      "customfield_14037": null,
+      "fixVersions": [],
+      "customfield_15003": null,
+      "customfield_13621": null,
+      "customfield_17429": null,
+      "customfield_14038": null,
+      "customfield_11203": {
+        "id": "438",
+        "name": "Время до решения",
+        "_links": {
+          "self": "https://jira.petrovich.tech/rest/servicedeskapi/request/1003573/sla/438"
+        },
+        "completedCycles": [
+          {
+            "startTime": {
+              "iso8601": "2025-06-09T16:19:47+0300",
+              "jira": "2025-06-09T16:19:47.303+0300",
+              "friendly": "09/июн/25 16:19",
+              "epochMillis": 1749475187303
+            },
+            "stopTime": {
+              "iso8601": "2025-06-09T16:27:30+0300",
+              "jira": "2025-06-09T16:27:30.485+0300",
+              "friendly": "09/июн/25 16:27",
+              "epochMillis": 1749475650485
+            },
+            "breached": false,
+            "goalDuration": {
+              "millis": 57600000,
+              "friendly": "16ч"
+            },
+            "elapsedTime": {
+              "millis": 463182,
+              "friendly": "7м"
+            },
+            "remainingTime": {
+              "millis": 57136818,
+              "friendly": "15ч 52м"
+            }
+          }
+        ]
+      },
+      "customfield_12406": null,
+      "customfield_10900": null,
+      "customfield_13050": "",
+      "priority": {
+        "self": "https://jira.petrovich.tech/rest/api/2/priority/2",
+        "iconUrl": "https://jira.petrovich.tech/images/icons/priorities/high.svg",
+        "name": "High",
+        "id": "2"
+      },
+      "customfield_16329": {
+        "self": "https://jira.petrovich.tech/rest/api/2/user?username=iv.frolov",
+        "name": "iv.frolov",
+        "key": "JIRAUSER21578",
+        "emailAddress": "iv.frolov@petrovich.tech",
+        "avatarUrls": {
+          "48x48": "https://jira.petrovich.tech/secure/useravatar?ownerId=JIRAUSER21578&avatarId=14931",
+          "24x24": "https://jira.petrovich.tech/secure/useravatar?size=small&ownerId=JIRAUSER21578&avatarId=14931",
+          "16x16": "https://jira.petrovich.tech/secure/useravatar?size=xsmall&ownerId=JIRAUSER21578&avatarId=14931",
+          "32x32": "https://jira.petrovich.tech/secure/useravatar?size=medium&ownerId=JIRAUSER21578&avatarId=14931"
+        },
+        "displayName": "Фролов Иван",
+        "active": true,
+        "timeZone": "Europe/Moscow"
+      },
+      "customfield_12401": null,
+      "customfield_15903": null,
+      "customfield_15901": null,
+      "customfield_15902": null,
+      "timeestimate": null,
+      "versions": [],
+      "status": {
+        "self": "https://jira.petrovich.tech/rest/api/2/status/5",
+        "description": "Работы по тикету завершены",
+        "iconUrl": "https://jira.petrovich.tech/images/icons/statuses/resolved.png",
+        "name": "Решен",
+        "id": "5",
+        "statusCategory": {
+          "self": "https://jira.petrovich.tech/rest/api/2/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Выполнено"
+        }
+      },
+      "customfield_17403": {
+        "id": "436",
+        "name": "Время до взятия в работу",
+        "_links": {
+          "self": "https://jira.petrovich.tech/rest/servicedeskapi/request/1003573/sla/436"
+        },
+        "completedCycles": [
+          {
+            "startTime": {
+              "iso8601": "2025-06-09T16:19:47+0300",
+              "jira": "2025-06-09T16:19:47.303+0300",
+              "friendly": "09/июн/25 16:19",
+              "epochMillis": 1749475187303
+            },
+            "stopTime": {
+              "iso8601": "2025-06-09T16:27:24+0300",
+              "jira": "2025-06-09T16:27:24.248+0300",
+              "friendly": "09/июн/25 16:27",
+              "epochMillis": 1749475644248
+            },
+            "breached": false,
+            "goalDuration": {
+              "millis": 7200000,
+              "friendly": "2ч"
+            },
+            "elapsedTime": {
+              "millis": 456945,
+              "friendly": "7м"
+            },
+            "remainingTime": {
+              "millis": 6743055,
+              "friendly": "1ч 52м"
+            }
+          }
+        ]
+      },
+      "customfield_17402": {
+        "id": "435",
+        "name": "Время в ожидании заявителя",
+        "_links": {
+          "self": "https://jira.petrovich.tech/rest/servicedeskapi/request/1003573/sla/435"
+        },
+        "completedCycles": []
+      },
+      "customfield_14810": null,
+      "customfield_17407": null,
+      "customfield_17406": null,
+      "customfield_13601": null,
+      "customfield_12503": null,
+      "customfield_12502": null,
+      "customfield_14804": null,
+      "customfield_12504": null,
+      "aggregatetimeestimate": null,
+      "customfield_12627": null,
+      "customfield_18167": null,
+      "creator": {
+        "self": "https://jira.petrovich.tech/rest/api/2/user?username=iv.frolov",
+        "name": "iv.frolov",
+        "key": "JIRAUSER21578",
+        "emailAddress": "iv.frolov@petrovich.tech",
+        "avatarUrls": {
+          "48x48": "https://jira.petrovich.tech/secure/useravatar?ownerId=JIRAUSER21578&avatarId=14931",
+          "24x24": "https://jira.petrovich.tech/secure/useravatar?size=small&ownerId=JIRAUSER21578&avatarId=14931",
+          "16x16": "https://jira.petrovich.tech/secure/useravatar?size=xsmall&ownerId=JIRAUSER21578&avatarId=14931",
+          "32x32": "https://jira.petrovich.tech/secure/useravatar?size=medium&ownerId=JIRAUSER21578&avatarId=14931"
+        },
+        "displayName": "Фролов Иван",
+        "active": true,
+        "timeZone": "Europe/Moscow"
+      },
+      "customfield_18163": null,
+      "customfield_18164": null,
+      "customfield_13034": null,
+      "aggregateprogress": {
+        "progress": 0,
+        "total": 0
+      },
+      "customfield_10200": null,
+      "customfield_12501": null,
+      "customfield_12500": null,
+      "customfield_12734": null,
+      "customfield_12733": null,
+      "customfield_11407": null,
+      "customfield_11406": null,
+      "timespent": null,
+      "customfield_15202": null,
+      "customfield_15201": null,
+      "aggregatetimespent": null,
+      "customfield_13700": null,
+      "customfield_12732": null,
+      "customfield_12602": null,
+      "customfield_12601": null,
+      "customfield_13019": null,
+      "workratio": -1,
+      "created": "2025-06-09T16:19:47.195+0300",
+      "customfield_14100": null,
+      "customfield_12600": null,
+      "customfield_13018": null,
+      "customfield_13017": null,
+      "customfield_18130": null,
+      "customfield_13122": null,
+      "customfield_13005": null,
+      "customfield_13125": null,
+      "attachment": [],
+      "customfield_18009": null,
+      "customfield_18005": null,
+      "customfield_18127": null,
+      "customfield_18006": null,
+      "customfield_18007": null,
+      "customfield_10400": null,
+      "customfield_18008": null,
+      "customfield_11601": null,
+      "customfield_11603": null,
+      "customfield_11604": null,
+      "customfield_11607": null
+    }
+  }
+}
