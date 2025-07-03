@@ -134,13 +134,17 @@ async def process_level(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith("svc_"))
 async def process_service(callback: CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
     service_index = int(callback.data.replace("svc_", ""))
     service = PROBLEM_SERVICES[service_index]
+    logger.info(f"[{user_id}] Выбран сервис: {service}")
     await state.update_data(service=service)
+    
     # Автоматически устанавливаем время +1 час от текущего
     now = dt.now()
     fix_time = now + timedelta(hours=1)
     await state.update_data(fix_time=fix_time.isoformat())
+    
     # Показываем предварительный просмотр
     data = await state.get_data()
     title = data["title"]
@@ -156,16 +160,15 @@ async def process_service(callback: CallbackQuery, state: FSMContext):
     )
     await state.update_data(preview_text=preview_text)
 
-    # Создаем встроенную клавиатуру для подтверждения
-    builder = InlineKeyboardBuilder()
-    builder.button(text="✅ Отправить", callback_data="confirm_send")
-    builder.button(text="❌ Отмена", callback_data="confirm_cancel")
-    await callback.message.edit_text(
+    # ИСПРАВЛЕНИЕ: Используем новое сообщение вместо редактирования
+    logger.info(f"[{user_id}] Отправляем предварительный просмотр с инлайн клавиатурой")
+    await callback.message.answer(
         preview_text,
         parse_mode='HTML',
-        reply_markup=builder.as_markup()
+        reply_markup=create_confirmation_keyboard()
     )
     await state.set_state(NewMessageStates.CONFIRMATION)
+    await callback.answer()
 
 
 @router.message(NewMessageStates.ENTER_START_TIME)
@@ -421,6 +424,15 @@ async def confirm_send_callback(callback: CallbackQuery, state: FSMContext):
         await state.clear()
 
 
+@router.callback_query(F.data == "cancel")
+async def cancel_action_callback(callback: CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    logger.info(f"[{user_id}] Отмена действия через callback")
+    await state.clear()
+    await callback.message.edit_text("🚫 Действие отменено", reply_markup=None)
+    await callback.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
+    await callback.answer()
+
 @router.callback_query(F.data == "confirm_cancel")
 async def cancel_send_callback(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
@@ -428,3 +440,4 @@ async def cancel_send_callback(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.message.edit_text("🚫 Действие отменено", reply_markup=None)
     await callback.message.answer("Выберите действие:", reply_markup=create_main_keyboard())
+    await callback.answer()

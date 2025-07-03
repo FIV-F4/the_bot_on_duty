@@ -4,7 +4,7 @@ import os
 import sys
 from datetime import datetime
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -54,6 +54,7 @@ bot = Bot(
 )
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
+router = Router()
 
 # Состояния FSM
 class FAStates(StatesGroup):
@@ -121,7 +122,7 @@ def get_keyboard_from_list(options, add_cancel=True, is_optional=False):
     return builder.as_markup()
 
 # Обработчики
-@dp.message(Command("start"))
+@router.message(Command("start"))
 async def cmd_start(message: types.Message):
     await message.answer(
         "Привет! Я бот для создания задач FA.\n"
@@ -129,7 +130,7 @@ async def cmd_start(message: types.Message):
         reply_markup=get_main_keyboard()
     )
 
-@dp.callback_query(lambda c: c.data == "create_fa")
+@router.callback_query(F.data == "create_fa")
 async def create_fa_task(callback_query: types.CallbackQuery, state: FSMContext):
     await state.set_state(FAStates.waiting_for_summary)
     await callback_query.message.answer(
@@ -138,13 +139,13 @@ async def create_fa_task(callback_query: types.CallbackQuery, state: FSMContext)
     )
     await callback_query.answer()
 
-@dp.callback_query(lambda c: c.data == "cancel")
+@router.callback_query(F.data == "cancel")
 async def cancel_operation(callback_query: types.CallbackQuery, state: FSMContext):
     await state.clear()
     await callback_query.message.answer("Создание задачи отменено.", reply_markup=get_main_keyboard())
     await callback_query.answer()
 
-@dp.callback_query(lambda c: c.data == "skip")
+@router.callback_query(F.data == "skip")
 async def skip_field(callback_query: types.CallbackQuery, state: FSMContext):
     current_state = await state.get_state()
     if current_state == FAStates.waiting_for_naumen_type:
@@ -163,7 +164,7 @@ async def skip_field(callback_query: types.CallbackQuery, state: FSMContext):
         )
     await callback_query.answer()
 
-@dp.callback_query(lambda c: c.data.startswith("opt_"))
+@router.callback_query(F.data.startswith("opt_"))
 async def process_option(callback_query: types.CallbackQuery, state: FSMContext):
     option_index = int(callback_query.data.replace("opt_", ""))
     current_state = await state.get_state()
@@ -238,7 +239,7 @@ async def process_option(callback_query: types.CallbackQuery, state: FSMContext)
     
     await callback_query.answer()
 
-@dp.callback_query(lambda c: c.data == "confirm")
+@router.callback_query(F.data == "confirm")
 async def confirm_task(callback_query: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     try:
@@ -280,7 +281,7 @@ async def confirm_task(callback_query: types.CallbackQuery, state: FSMContext):
     await state.clear()
     await callback_query.answer()
 
-@dp.message(FAStates.waiting_for_summary)
+@router.message(FAStates.waiting_for_summary)
 async def process_summary(message: types.Message, state: FSMContext):
     if message.text == "❌ Отмена":
         await state.clear()
@@ -294,7 +295,7 @@ async def process_summary(message: types.Message, state: FSMContext):
         reply_markup=ReplyKeyboardRemove()
     )
 
-@dp.message(FAStates.waiting_for_description)
+@router.message(FAStates.waiting_for_description)
 async def process_description(message: types.Message, state: FSMContext):
     if message.text == "❌ Отмена":
         await state.clear()
@@ -311,6 +312,9 @@ async def process_description(message: types.Message, state: FSMContext):
 # Запуск бота
 async def main():
     logger.info("🚀 Запуск FA бота...")
+    
+    # Регистрация роутера
+    dp.include_router(router)
     
     # Установка команд
     from aiogram.types import BotCommand
